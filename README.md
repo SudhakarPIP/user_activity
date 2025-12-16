@@ -1,118 +1,256 @@
 # User Activity Service
 
-Spring Boot + MySQL module to record user activities, soft-delete them, and fetch a paginated timeline. Includes validation, global error handling, Swagger/OpenAPI docs, and unit/integration tests.
-User Management - Java Spring Boot
-This is a Java Spring Boot–based User Activity Management & Timeline API that supports to 
-•	Record user activities
-•	Update & delete activities
-•	Retrieve a paginated & sorted timeline
+A Spring Boot + MySQL microservice to record user activities, soft-delete them, and fetch a paginated timeline. Includes validation, global error handling, Swagger/OpenAPI documentation, and comprehensive tests.
 
-The project implements secure authentication using JSON Web Tokens (JWT) and runs on the default server port 8080. 
+## Features
 
-## Stack
-- Java 17, Spring Boot 3.x (Web, Validation)
-- Spring Data JPA (Hibernate), MySQL
-- Swagger/OpenAPI via springdoc
-- JUnit 5, Mockito, MockMvc, H2 (tests)
-- Maven, JaCoCo
-Features
-User activityType =  LOGIN, LOGOUT, PASSWORD_CHANGE, PROFILE_UPDATE
+- **Record user activities** (LOGIN, LOGOUT, PASSWORD_CHANGE, PROFILE_UPDATE)
+- **Soft delete activities** (data recovery and audit trails)
+- **Paginated & sorted timeline** (newest first)
+- **Swagger/OpenAPI documentation**
+- **Input validation** with detailed error responses
+- **SQL queries externalized** in XML for production readiness
 
-## Getting Started   
-### Prerequisites
+## Tech Stack
+
+| Component | Technology |
+|-----------|------------|
+| Language | Java 17 |
+| Framework | Spring Boot 3.2.0 |
+| Database | MySQL 8.0 |
+| ORM | Spring Data JPA (Hibernate) |
+| API Docs | SpringDoc OpenAPI 2.2.0 |
+| Build Tool | Maven |
+| Testing | JUnit 5, Mockito, MockMvc |
+| Code Coverage | JaCoCo |
+
+## Prerequisites
+
 - JDK 17+
 - Maven 3.8+
-- MySQL running and reachable
+- MySQL 8.0+ running and accessible
 
-### Configuration
-Edit `src/main/resources/application.properties` as needed:
+## Getting Started
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/SudhakarPIP/user_activity.git
+cd user_activity
+```
+## 1.1 Build the project using Maven:
+
+## 1.2 Run the application:
+
+The application will start on the default port: `http://localhost:8080`.
+
+
+### 2. Configure Database
+
+Create a MySQL database:
+
+```sql
+CREATE DATABASE pip;
+```
+
+Edit `src/main/resources/application.properties`:
+
+```properties
 spring.datasource.url=jdbc:mysql://localhost:3306/pip?useSSL=false&serverTimezone=UTC
 spring.datasource.username=root
-spring.datasource.password=******
+spring.datasource.password=your_password
+```
 
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
-springdoc.api-docs.path=/api-docs
-springdoc.swagger-ui.path=/swagger-ui.htmlFor tests, H2 is used via `src/test/resources/application-test.properties`.
+### 3. Build the Application
 
-### Build & Run
+```bash
 mvn clean install
-mvn spring-boot:runApp runs on `http://localhost:8080`.
+```
 
-### Swagger / OpenAPI
-- Swagger UI: `http://localhost:8080/swagger-ui.html`
-- OpenAPI JSON: `http://localhost:8080/api-docs`
+### 4. Run the Application
 
-## API Endpoints
+```bash
+mvn spring-boot:run
+```
+
+The application starts at: **http://localhost:8080**
+
+### 5. Verify Startup
+
+On startup, the application validates the database connection and displays table information in the logs.
+
+## API Documentation
+
+### Swagger UI
+Access interactive API documentation at:
+- **Swagger UI**: http://localhost:8080/swagger-ui.html
+- **OpenAPI JSON**: http://localhost:8080/api-docs
+
+### REST API Endpoints
+
 Base path: `/api/v1`
 
-- `POST /users/{userId}/activities`  
-  Create activity. Body:
- 
-  {
-    "activityType": "LOGIN",
-    "description": "User logged in from web",
-    "metadata": "{\"ip\":\"192.168.1.10\",\"device\":\"Chrome\"}"
-  }
-  - `DELETE /activities/{activityId}`  
-  Soft delete activity.
-- `GET /users/{userId}/activities/timeline?page=0&size=20`  
-  Paginated timeline (sorted desc by `createdAt`).
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/users/{userId}/activities` | Create a new activity |
+| DELETE | `/activities/{activityId}` | Soft delete an activity |
+| GET | `/users/{userId}/activities/timeline` | Get paginated timeline |
 
-Supported `activityType`: `LOGIN`, `LOGOUT`, `PASSWORD_CHANGE`, `PROFILE_UPDATE`.
+### Create Activity
 
-## Validation & Errors
-- Request validation via `jakarta.validation`.
-- Consistent error JSON from `GlobalExceptionHandler`.
-- Soft-delete guard prevents double deletion.
-- Not-found returns 404.
+**POST** `/api/v1/users/{userId}/activities`
 
-## Data Model
+Request Body:
+```json
+{
+  "activityType": "LOGIN",
+  "description": "User logged in from web",
+  "metadata": "{\"ip\":\"192.168.1.10\",\"device\":\"Chrome\"}"
+}
+```
+
+Response (201 Created):
+```json
+{
+  "id": 1001,
+  "activityType": "LOGIN",
+  "description": "User logged in from web",
+  "metadata": "{\"ip\":\"192.168.1.10\",\"device\":\"Chrome\"}",
+  "createdAt": "2025-12-10T10:15:30Z"
+}
+```
+
+### Delete Activity
+
+**DELETE** `/api/v1/activities/{activityId}`
+
+Response: `204 No Content`
+
+### Get Timeline
+
+**GET** `/api/v1/users/{userId}/activities/timeline?page=0&size=20`
+
+Response (200 OK):
+```json
+{
+  "userId": 123,
+  "page": 0,
+  "size": 20,
+  "totalElements": 52,
+  "totalPages": 3,
+  "activities": [...]
+}
+```
+
+### Activity Types
+
+| Type | Description |
+|------|-------------|
+| `LOGIN` | User login event |
+| `LOGOUT` | User logout event |
+| `PASSWORD_CHANGE` | Password change event |
+| `PROFILE_UPDATE` | Profile update event |
+
+## Project Structure
+
+```
+src/
+├── main/
+│   ├── java/com/useractivity/
+│   │   ├── controller/          # REST controllers
+│   │   ├── service/             # Business logic
+│   │   ├── repository/          # Data access layer
+│   │   ├── entity/              # JPA entities
+│   │   ├── dto/                 # Request/Response DTOs
+│   │   ├── enums/               # Enumerations
+│   │   ├── config/              # Configuration classes
+│   │   └── exception/           # Exception handling
+│   └── resources/
+│       ├── application.properties
+│       ├── sql-queries.xml      # Externalized SQL queries
+│       └── static/
+└── test/
+    └── java/com/useractivity/   # Test classes
+```
+
+## Database Schema
+
 Table: `user_activities`
-- `id` (PK, BIGINT, auto-increment)
-- `user_id` (indexed)
-- `activity_type` (VARCHAR)
-- `description` (TEXT)
-- `metadata` (JSON/TEXT)
-- `created_at`, `updated_at` (timestamps)
-- `is_deleted` (BOOLEAN)
 
-Indexes on `user_id`, `created_at`.
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | BIGINT (PK) | Auto-increment primary key |
+| `user_id` | BIGINT | User identifier (indexed) |
+| `activity_type` | VARCHAR | Activity type enum |
+| `description` | TEXT | Activity description |
+| `metadata` | TEXT | JSON metadata string |
+| `created_at` | TIMESTAMP | Creation timestamp (indexed) |
+| `updated_at` | TIMESTAMP | Last update timestamp |
+| `is_deleted` | BOOLEAN | Soft delete flag |
 
-## Tests
-- Unit: service logic, exceptions.
-- Web layer: controller validation and HTTP codes.
-- Integration: create/delete/timeline flows with H2.
-- Run: `mvn test` (JaCoCo report under `target/site/jacoco`).
+## Running Tests
 
-## Notes
-- Timeline latency target ≤ 800 ms (ensure DB indexes present).
-- Code quality: avoid Sonar blocker/critical issues.
-- Default packaging: WAR (Tomcat provided scope). Adjust if you prefer JAR.
-REST API Endpoints
-Method	        Endpoint	                                              Description
-POST	          /api/v1/users/{userId}/activities	                      Create new activity
-DELETE	        /api/v1/activities/{activityId}	                        Soft delete
-GET	            /api/v1/users/{userId}/activities/timeline?page=&size=	Paginated timeline
+```bash
+# Run all tests
+mvn test
 
-Default Port: 8080
+# Run tests with coverage report
+mvn clean test jacoco:report
 
-Getting Started
-Prerequisites
-Make sure you have the following installed:
+# View coverage report
+# Open: target/site/jacoco/index.html
+```
 
-Java Development Kit (JDK)
-Maven
-MSSQL
-Installation
-Clone the repository:
+## Error Handling
 
-git clone https://github.com/SudhakarPIP/user_activity.git
-Navigate to the project directory:
+All errors return consistent JSON responses:
 
-cd user_activity
-Build the project using Maven:
+```json
+{
+  "timestamp": "2025-12-10T10:30:00",
+  "status": 400,
+  "error": "Validation Failed",
+  "message": "Input validation failed",
+  "path": "/api/v1/users/123/activities",
+  "fieldErrors": [
+    {
+      "field": "activityType",
+      "message": "activityType is required",
+      "rejectedValue": null
+    }
+  ]
+}
+```
 
-Run the application:
+| Status Code | Description |
+|-------------|-------------|
+| 201 | Activity created successfully |
+| 204 | Activity deleted successfully |
+| 400 | Validation error or activity already deleted |
+| 404 | Activity not found |
+| 500 | Internal server error |
 
-The application will start on the default port: http://localhost:8080.
+## Configuration
+
+### Application Properties
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `server.port` | 8080 | Server port |
+| `spring.jpa.hibernate.ddl-auto` | validate | Schema management |
+| `spring.jpa.show-sql` | true | Log SQL queries |
+| `springdoc.swagger-ui.path` | /swagger-ui.html | Swagger UI path |
+
+### SQL Queries
+
+SQL queries are externalized in `src/main/resources/sql-queries.xml` for production readiness and easy maintenance.
+
+## Performance
+
+- Timeline API latency target: ≤ 800 ms
+- Database indexes on `user_id` and `created_at` columns
+- Pagination prevents large dataset loading
+
+## License
+
+This project is licensed under the MIT License.
